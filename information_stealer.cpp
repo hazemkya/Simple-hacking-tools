@@ -11,6 +11,7 @@ using namespace std;
 
 int main()
 {
+    //winsock init
     WSADATA wsaData;
     WORD DLLversion = MAKEWORD(2, 1);
     if (WSAStartup(DLLversion, &wsaData) != 0)
@@ -18,6 +19,12 @@ int main()
 
     //Create Socket
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+
+    //connect to attacker
+
+    //take action
+
+    //action 1: send file with (name)
 
     ExitProcess(EXIT_SUCCESS);
 }
