@@ -47,8 +47,8 @@ int main(int argc, char *args[])
     else
     {
         // hard code server variables
-        ip = "10.10.18.2";
-        port = 1234;
+        ip = "0";
+        port = 0;
     }
 
     // winsock init
